@@ -1,0 +1,23 @@
+# File type aliasses
+
+# Functions which are aliasses for commands 
+
+function pcd {
+   pushd $1
+}
+
+function back {
+    popd 
+}
+
+# Common commands 
+
+alias -g wl="wc -l"
+alias -g fetch="hg pull && hg update"
+alias -g lsc="ls -lctr"
+alias -g psa="ps aux" 
+
+# less filtering
+
+export LESS='-R'
+export LESSOPEN='|~/.lessfilter %s'

@@ -1,0 +1,19 @@
+URxvt.background:Black
+URxvt.foreground:Green
+Emacs.fontBackend: xft
+URxvt.font: xft:Terminus:Bold:autohint=true:size=12:antialiasing=true
+URxvt.buffered: true
+Xft.antialias:true
+URxvt.urlLauncher: firefox
+URxvt.scrollBar: false
+URxvt.scrollWithBuffer: true
+URxvt.scrollTtyOutput: true
+URxvt.saveLines: 10000
+URxvt.pointerColor: Red
+URxvt.cursorColor: Red
+URxvt.depth: 32
+URxvt.title: terminal
+URxvt.perl-ext-common: default,matcher
+URxvt.url-launcher: /usr/bin/xdg-open
+URxvt.matcher.button: 1
+URxvt.colorUL: #4682B4

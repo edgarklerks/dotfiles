@@ -1,0 +1,9 @@
+hg-dotlog - writes a "dot" compatible revision history
+
+Paul Crowley, LShift Ltd, July 2008
+paul@lshift.net
+
+This is an alternative to the "graphviz" plugin for hg.  It works well for me but has few other users so it probably has lots of rough edges.
+
+As always, this software comes with no warranty express or implied.  If it breaks you get to keep both pieces.
+
