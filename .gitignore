@@ -1,0 +1,6 @@
+*.zwc 
+*.hi
+*~
+#*
+*.*~
+*start-vpn.zsh*
