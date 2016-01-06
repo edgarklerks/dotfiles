@@ -115,6 +115,9 @@ autoload -U zrecompile
 
 autoload -Uz colorify
 
+autoload -Uz git-extras
+git-extras
+
 # Recompile changed scripts as neccesary
 
 zrecompile -p \
@@ -127,6 +130,7 @@ zrecompile -p \
         -R ~/scripts/functions/myprompt -- \
         -R ~/scripts/functions/periodicity -- \
         -R ~/scripts/functions/spinner -- \
+        -R ~/scripts/functions/git-extras -- \
         -R ~/scripts/functions/keybindings
 
 function run_server {
@@ -151,12 +155,17 @@ function sman {
 
 autoload -Uz functional
 functional
+# Tmux integration extensions
+autoload -Uz tmux-extras
+tmux-extras
+
 
 autoload -Uz macro
 
 # Preexec hooks
 function preexec {
         macro $1 $2 $3
+	tmux-preexec "$@"
 }
 
 
@@ -180,7 +189,7 @@ antigen bundle extract
 antigen bundle vagrant
 antigen bundle vagrant
 antigen bundle debian
-antigen bundle colored-man
+antigen bundle git
 antigen bundle zsh-users/zsh-completions
 
 antigen apply
@@ -190,3 +199,6 @@ eval "$(gpg-agent --daemon)"
 
 # OPAM configuration
 . /home/eklerks/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true
+
+export NVM_DIR="/home/eklerks/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm

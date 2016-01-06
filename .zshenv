@@ -8,14 +8,16 @@ fpath=(
     $fpath
 )
 
-#export NIX_CONF_DIR="$HOME/.config/nix/"
+export NIX_CONF_DIR="$HOME/.config/nix/"
 
 . $HOME/.nix-profile/etc/profile.d/nix.sh
 
 
-export PATH="$HOME/bin:$HOME/sources/factor/:$HOME/sources/sbt/bin:$HOME/.bin:/usr/local/texlive/2014/bin/x86_64-linux:$HOME/scripts:$HOME/servers/:$HOME/orientdb/releases/orientdb-1.5.1/bin:$HOME/.cabal/bin:$HOME/perl5/bin:$PATH";
+export PATH="$HOME/.bin:$HOME/sources/factor/:$HOME/sources/sbt/bin:$HOME/.bin:/usr/local/texlive/2014/bin/x86_64-linux:$HOME/scripts:$HOME/servers/:$HOME/orientdb/releases/orientdb-1.5.1/bin:$HOME/.cabal/bin:$HOME/perl5/bin:$PATH";
 export PYTHONPATH="$HOME/.nix-profile/lib/python2.7/site-packages:$PYTHONPATH"
 export PYTHONPATH="$HOME/.nix-profile/lib/python2.7:$PYTHONPATH"
 export LIBRARY_PATH="$HOME/.nix-profile/lib:$LIBRARY_PATH"
 export EDITOR="/home/eklerks/scripts/emacs.vim"
 
+export MANPATH="$HOME/.man:$MANPATH"
+export PATH=/usr/local/clang/bin:/usr/local/texlive/2015/bin/x86_64-linux:$PATH

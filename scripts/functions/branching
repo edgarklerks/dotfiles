@@ -1,13 +1,13 @@
 #!/usr/bin/zsh
 #
-# Finds out if there is a branch associated for the current 
+# Finds out if there is a branch associated for the current
 # directory and sets psvar 7 as the name and psvar 8 as the type
 
 psvar[7]='no branch'
 
 function set_branch {
     out=exec hg branch &>/dev/null
-    if [[ $? == 0 ]]; then 
+    if [[ $? == 0 ]]; then
         psvar[7]=$(hg branch)
         psvar[8]='(hg)'
         return 1
@@ -15,13 +15,13 @@ function set_branch {
             psvar[7]='no branch'
             psvar[8]=''
             return 0
-   fi 
+   fi
 }
 
 function set_branch_git {
     out=exec git branch &>/dev/null
-    if [[ $? == 0 ]]; then 
-        psvar[7]=$(git branch)
+    if [[ $? == 0 ]]; then
+        psvar[7]=$(git branch | tr -d '\n' | sed 's/  /->/g')
         psvar[8]='(git)'
         return 1
     else
@@ -32,7 +32,7 @@ function set_branch_git {
 }
 function branching {
     set_branch
-    if [[ $? == 0 ]]; then 
+    if [[ $? == 0 ]]; then
             set_branch_git
     fi
 
