@@ -1,4 +1,3 @@
-
 # Caching
 
 zstyle ':completion:*' use-cache true
@@ -11,7 +10,7 @@ zstyle ':completion:*' completions 1
 zstyle ':completion:*' expand prefix suffix
 zstyle ':completion:*' file-sort name
 zstyle ':completion:*' glob 1
-zstyle ':completion:*' group-name ''
+# zstyle ':completion:*' group-name ''
 zstyle ':completion:*' ignore-parents parent pwd .. directory
 zstyle ':completion:*' insert-unambiguous true
 zstyle ':completion:*' list-grouped
@@ -34,7 +33,7 @@ zstyle ':completion:*' verbose true
 zstyle ':completion:*' word true
 zstyle :compinstall filename '$HOME/.zshrc'
 
-
+alias kudt='sudo shutdown -P now'
 autoload -Uz compinit
 compinit
 
@@ -98,6 +97,9 @@ function periodic {
 }
 
 PERIOD=1
+# Load the not found command handler, it defaults to /etc/zsh_command_not_found
+autoload -k command_handling
+command_handling
 
 # Load my aliases
 autoload -U aliases
@@ -113,12 +115,15 @@ autoload -U zrecompile
 
 autoload -Uz colorify
 
+# Recompile changed scripts as neccesary
+
 zrecompile -p \
         -R ~/.zshrc -- \
         -R ~/vimscripts/line.sh -- \
         -R ~/scripts/reset_repos.zsh -- \
         -R ~/scripts/functions/aliases -- \
         -R ~/scripts/functions/branching -- \
+        -R ~/scripts/functions/command_handling -- \
         -R ~/scripts/functions/myprompt -- \
         -R ~/scripts/functions/periodicity -- \
         -R ~/scripts/functions/spinner -- \
@@ -179,3 +184,9 @@ antigen bundle colored-man
 antigen bundle zsh-users/zsh-completions
 
 antigen apply
+
+
+eval "$(gpg-agent --daemon)"
+
+# OPAM configuration
+. /home/eklerks/.opam/opam-init/init.zsh > /dev/null 2> /dev/null || true

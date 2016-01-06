@@ -17,5 +17,5 @@ export PATH="$HOME/bin:$HOME/sources/factor/:$HOME/sources/sbt/bin:$HOME/.bin:/u
 export PYTHONPATH="$HOME/.nix-profile/lib/python2.7/site-packages:$PYTHONPATH"
 export PYTHONPATH="$HOME/.nix-profile/lib/python2.7:$PYTHONPATH"
 export LIBRARY_PATH="$HOME/.nix-profile/lib:$LIBRARY_PATH"
-export EDITOR="/usr/local/bin/emacs.vim"
+export EDITOR="/home/eklerks/scripts/emacs.vim"
 
