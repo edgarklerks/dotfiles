@@ -19,6 +19,8 @@ import System.Exit
 import qualified XMonad.StackSet as W
 import qualified Data.Map        as M
 
+import Control.Monad
+
 import XMonad.Util.Cursor
 import XMonad.Layout.Mosaic
 import XMonad.Layout.Circle
@@ -156,7 +158,7 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
     -- launch a terminal
     [
-      ((modm .|. shiftMask, xK_Return), lastTopic >>= spawnShell myTopicConfig)
+      ((modm .|. shiftMask, xK_Return), currentTopic >>= \q -> spawnShell ( myTopicConfig q) q)
     -- Switch between layouts
     , ((modm .|. controlMask, xK_1), sendMessage $ L.JumpToLayout "Tall")
     , ((modm .|. controlMask, xK_2), sendMessage $ L.JumpToLayout "Wide")
@@ -263,14 +265,16 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
     --
     -- mod-{w,e,r}, Switch to physical/Xinerama screens 1, 2, or 3
     -- mod-shift-{w,e,r}, Move client to screen 1, 2, or 3
+    -- e <-> w
+    -- r <-> w
     --
-    [((m .|. modm, key), screenWorkspace sc >>= flip whenJust (windows . f) >> warpToScreen sc (1/2) (1/2))
-        | (key, sc) <- [xK_w, xK_e, xK_r] `zip` [0..]
-        , (f, m) <- [(W.view, 0), (W.shift, shiftMask)]]
+    [((m .|. modm, key), screenWorkspace sc >>= flip whenJust f )
+        | (key, sc) <- [xK_e, xK_w, xK_r] `zip` [0..]
+        , (f, m) <- [(gotoSpare, 0), (windows . W.shift, shiftMask)]]
   -- Topic spaces keys
     ++
-  [ ((modm .|. shiftMask             , xK_n     ), lastTopic >>=  spawnShell myTopicConfig) -- %! Launch terminal
-  , ((modm .|. shiftMask              , xK_a     ), currentTopicAction myTopicConfig)
+  [ ((modm .|. shiftMask             , xK_n     ), currentTopic >>=  \q -> spawnShell ( myTopicConfig q) q) -- %! Launch terminal
+  , ((modm .|. shiftMask              , xK_a     ),  currentTopicAction ( myTopicConfig "home"))
   , ((modm              , xK_g     ), promptedGoto)
   , ((modm .|. shiftMask, xK_g     ), promptedShift)
   {- more  keys ... -}
@@ -281,13 +285,14 @@ myKeys conf@(XConfig {XMonad.modMask = modm}) = M.fromList $
 
 lastTopic :: X Topic
 lastTopic = do xs <- getLastFocusedTopics
+               flashText defaultSTConfig (toRational 1/2) (show xs)
                case xs of
-                 [] -> return (defaultTopic myTopicConfig)
+                 [] -> return (defaultTopic ( myTopicConfig "home"))
                  (x:xs) -> return x
 evalTopicDescription :: TopicDescription -> [(Topic, Dir, X ())]
 evalTopicDescription (TD xs) = let p = worker xs in p
                  where worker (x:xs) = let (tn, td, ta) = getTriple x
-                                       in (tn, td, ta myTopicConfig td tn) : worker xs
+                                       in (tn, td, ta (myTopicConfig tn) td tn) : worker xs
                        worker [] = []
 
 createTopicConfig :: Topic -> TopicDescription -> TopicConfig
@@ -304,14 +309,23 @@ createTopicConfig dt td = let p1 (a,b,c) = a
 
                             }
 
-myTopicConfig :: TopicConfig
-myTopicConfig = createTopicConfig "home" topicDescription
+myTopicConfig :: String -> TopicConfig
+myTopicConfig tn = createTopicConfig tn topicDescription
 
 myTopics :: Topics
 myTopics = (\(x,y,z) -> x) <$> evalTopicDescription topicDescription
 
+gotoSpare :: Topic -> X ()
+gotoSpare topic = do
+          windows $ W.view topic
+          wins <- gets $ W.integrate' . W.stack . W.workspace . W.current . windowset
+          when (null wins) $ topicAction (myTopicConfig topic) topic
+          updatePointer (Relative 0.5 0.5)
+
+currentTopic :: X Topic
+currentTopic = gets (W.tag . W.workspace . W.current . windowset)
 goto :: Topic -> X ()
-goto = switchTopic myTopicConfig
+goto tn = switchTopic ( myTopicConfig tn) tn
 
 promptedGoto :: X ()
 promptedGoto = workspacePrompt myXPConfig goto

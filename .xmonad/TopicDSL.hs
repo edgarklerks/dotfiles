@@ -6,11 +6,14 @@ import Data.List
 import TopicMachine
 import TopicParser
 import XMonad.Actions.TopicSpace
+import Data.Maybe
 import qualified Language.Haskell.TH.Lift as L
 import Language.Haskell.TH
 import Language.Haskell.TH.Lib
 import XMonad.Actions.ShowText
 import Control.Monad.Trans
+import Control.Monad
+import Control.Applicative
 import qualified Data.Map        as M
 import XMonad hiding ((|||), Tall)
 -- import XMonad.Actions.Eval
@@ -57,14 +60,16 @@ loadTopicProgram = do xs <- parseFromFile topicDescriptor "/home/eklerks/.xmonad
 
 
 programToTopicMachine :: TopicConfig -> LabelName -> FilePath -> Program -> MachineSate X
-programToTopicMachine mt lbl fp = pushStack (String fp) . pushStack (String lbl) . programToMachineState [
-                      ("spawn", spawnAction),
-                      ("shell", shellAction),
+programToTopicMachine mt lbl fp = pushStack (String fp) . pushStack (String lbl) . defaultMachineState mt
+defaultMachineState mt = programToMachineState [
+    ("spawn", spawnAction),
+    ("shell", shellAction),
+    ("tmux", tmuxAction),
 
-                      ("shellIn", spawnShellInAction),
-                      ("msg", message),
-                      ("def", defaultSpawnAction)
-           ]
+    ("shellIn", spawnShellInAction),
+    ("msg", message),
+    ("def", defaultSpawnAction)
+    ]
       where spawnAction :: MachineSate X -> MachineContext X (MachineSate X)
             spawnAction ms = do ([s1], ms') <-  takeStack 1 ms
                                 case s1 of
@@ -81,6 +86,46 @@ programToTopicMachine mt lbl fp = pushStack (String fp) . pushStack (String lbl)
                        case s1 of
                          String tit -> lift (spawnShell mt tit) *> return ms'
                          _ -> errorsignal ms "shell expects s1 to be a string"
+            -- | Usage:
+            -- stack parameters:
+            -- socketname   <- top
+            -- number of cmds
+            -- cmd n
+            -- cmd (n - 1)
+            -- cmd ..
+            -- cmd 1
+            -- topic space
+            -- dir         <- bottom
+            -- Example call:
+            -- <dir>
+            -- <topicspace>
+            -- <cmd1 .. cmd n>
+            -- <number of cmds>
+            -- <socketname>
+            -- ffi tmux
+            tmuxAction :: MachineSate X -> MachineContext X (MachineSate X)
+            tmuxAction ms = do
+                                    ([socketname, n],ms') <- takeStack 2 ms
+                                    case (socketname, n)  of
+                                         (String socketname, Integer n) -> do (cmds, ms'') <- takeStack (fromInteger n) ms'
+                                                                              checkCommands ms'' cmds
+                                                                              ([d, t], ms''') <- takeStack 2 ms''
+                                                                              case (t,d) of
+                                                                                (String t, String d) -> lift ( spawnShellInWith t d ( buildTmuxString socketname $ instructionToString cmds)) *> return ms'''
+
+                                                                                _ -> errorsignal ms "expect sn+1, sn+2 to be topicname and work directory"
+                                         _ -> errorsignal ms "expect s1 and s2 to socketname and number of cmds to follow"
+            checkCommands :: MachineSate X -> [Instruction] -> MachineContext X (MachineSate X)
+            checkCommands ms (String x:xs) = checkCommands ms xs
+            checkCommands ms [] = return ms
+            checkCommands ms _ = errorsignal ms "shell expects s3..sn to be strings"
+
+            -- | Potentially dangerous, only use after checkCommands
+            instructionToString :: [Instruction] -> [String]
+            instructionToString = map (\(String p ) -> p )
+
+            buildTmuxString :: String -> [String] -> String
+            buildTmuxString socketname xs = "tmux -L "++ socketname ++ " -u -2 " ++ intercalate "\\;" xs
 
             defaultSpawnAction :: MachineSate X -> MachineContext X (MachineSate X)
             defaultSpawnAction ms = do
@@ -104,9 +149,9 @@ runTopicMachine mt lbl fp prog = do
                 Left e -> flashText defaultSTConfig 5 e >> return ()
                 Right a -> return ()
 
-fillActions :: TopicConfig -> [Line] -> TopicDescription
+fillActions :: (Topic -> TopicConfig) -> [Line] -> TopicDescription
 fillActions tc [] = emptyDescription
-fillActions tc (Line tn fp prg:xs) = topic tn */* maybe "~" id fp **> maybe (\_ _ _ -> return ()) (\prg -> (\t d _ -> runTopicMachine tc tn (maybe "~" id fp) prg) ) prg *+* fillActions tc xs
+fillActions tc (Line tn fp prg:xs) = topic tn */* maybe "~" id fp **> maybe (\_ _ _ -> return ()) (\prg -> (\t d _ -> runTopicMachine ( tc tn) tn (maybe "~" id fp) prg) ) prg *+* fillActions ( tc ) xs
 
 defaultAction _ d t = spawnShellIn t d >*> 2 >> spawn ( "/home/eklerks/scripts/emacs.vim " ++ d)
 -- termAction _ d t =  spawnShellIn t d
@@ -138,7 +183,7 @@ spawnShell :: TopicConfig -> String -> X ()
 spawnShell myTopicConfig title = currentTopicDir myTopicConfig >>= spawnShellIn title
 
 spawnShellIn :: Topic -> Dir -> X ()
-spawnShellIn topic dir = spawn $ myShell [("-cd", dir)] topic ""
+spawnShellIn topic dir = spawn $ myShell [("-cd", dir)] topic ("/home/eklerks/.xmonad/tmux.sh " ++ topic ++ " " ++ dir)
 -- | Like query
 
 spawnShellInWith :: Topic -> Dir -> String -> X ()
@@ -157,3 +202,15 @@ myShell opts title cmd = "urxvt " ++ (unwords $ jointuples (nubBy (\a b -> fst a
                           ]
                       jointuples ((x,y):xs) = (x ++ " " ++ y) : jointuples xs
                       jointuples [] = []
+
+buildTmuxString :: String -> [String] -> String
+buildTmuxString socketname xs = "tmux -v -2 " ++ intercalate "\\;" xs
+
+
+
+debugProgram :: [Line] -> IO ()
+debugProgram xs = forM_ xs $ \(Line tn fp pr) -> case pr of
+                                                   Nothing -> putStrLn $ "No program associated with topic " ++ tn
+                                                   Just kk ->
+                                                    let ms = pushStack (String tn) . pushStack (String (fromMaybe "" fp)) $ programToMachineState debugBindings kk in  putStrLn $ "Running program " ++ tn
+                where debugBindings = undefined

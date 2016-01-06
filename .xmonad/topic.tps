@@ -3,7 +3,9 @@ home / "~" -> [
      ext
 ]
 hardware / "~/hardware" -> [
-	 ffi def
+	 0
+	 "hardware"
+	 ffi tmux
 	 ext
 ]
 sources / "~/sources" -> [

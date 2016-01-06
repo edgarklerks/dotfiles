@@ -58,7 +58,7 @@ executable xmonad
   -- other-extensions:
 
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.8 && <4.9, xmonad, xmonad-contrib, regex-tdfa, containers, process, X11, not-gloss, parsec, unordered-containers, vector, random-fu, pretty, transformers, mtl, template-haskell, th-lift
+  build-depends:       base >=4.7 , xmonad, xmonad-contrib, regex-tdfa, containers, process, X11, parsec, unordered-containers, vector, random-fu, pretty, transformers, mtl, template-haskell, th-lift
   -- Directories containing source files.
   -- hs-source-dirs:
 
